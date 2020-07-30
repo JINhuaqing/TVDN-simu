@@ -85,33 +85,33 @@ for(sq in 1:length(seqnum)){
       numchg = seqnum[sq]
       mestX = array(NA, c(dim(fMRI),  nsim))
       for(k in 1:nsim){
-      	      six = 1:r#(selecrank[k] * 2)
-      	      nY = mY[[k]]
+      	six = 1:r#(selecrank[k] * 2)
+      	nY = mY[[k]]
 	      nX = mX[[k]]
 	      if(numchg == 0){
-	      		chgpoint = c(1, length(time))
+	      	chgpoint = c(1, length(time))
 		}else{
 			chgpoint = mchgres[[k]]$Test[numchg, ]
-	      		chgpoint = c(1, chgpoint[!is.na(chgpoint)], length(time))
-			}
+	      	chgpoint = c(1, chgpoint[!is.na(chgpoint)], length(time))
+		}
 	      mchgpoint[[k]] = chgpoint
 	#      print(chgpoint)
 	      ResegS = matrix(NA, (length(chgpoint)-1), r)
 	      #ResegU = matrix(NA, 90, (length(chgpoint)-1))
 	      for(itr in 1:(length(chgpoint)-1)){
-   	      	       ix = chgpoint[itr]:(chgpoint[itr + 1]-1)
+   	      	 ix = chgpoint[itr]:(chgpoint[itr + 1]-1)
     		       yj = nY[, ix]
     		       Xj = nX[, ix]
     		       lambda = rep(NA, r)
-            	       for(j in 1:(nrow(Xj)/2)){
-                       	     tempY = yj[((j-1)* 2+1): (j * 2), ]
+            	 for(j in 1:(nrow(Xj)/2)){
+                       tempY = yj[((j-1)* 2+1): (j * 2), ]
                 	     tempX = Xj[((j-1)* 2+1): (j * 2), ]
                 	     corY = tempY%*%t(tempX)
                 	     corX = sum(diag(tempX %*% t(tempX)))
                 	     a = sum(diag(corY))/corX
                 	     b = (corY[2, 1] - corY[1, 2])/corX
                 	     lambda[uniqsix[[k]][j]]= (a + b*1i)
-                       }
+                   }
 		       temp = which(is.na(lambda))
 		       lambda[temp] = Conj(lambda[temp - 1])
 		       	ResegS[itr, ]= (lambda)#svd(Ymat %*% t(Xmat) %*% ginv(Xmat %*% t(Xmat)))$u

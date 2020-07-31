@@ -115,7 +115,7 @@ def GetNewEst(dXmat, Xmat, Amat, r, is_full=False):
         ndXmat[2*j, :] = tdXmat[j, :].real
         ndXmat[2*j+1, :] = tdXmat[j, :].imag
     if is_full:
-        edict({"ndXmat":ndXmat, "nXmat":nXmat, "kpidxs":kpidxs, "eigVecs":eigVecs})
+        return edict({"ndXmat":ndXmat, "nXmat":nXmat, "kpidxs":kpidxs, "eigVecs":eigVecs})
     else:
         return ndXmat, nXmat
 
@@ -314,20 +314,21 @@ def ReconXmat(ecpts, ndXmat, nXmat, kpidxs, eigVecs, TrueXmat, tStep):
     """
     r, n = ndXmat.shape
     d, _ = TrueXmat.shape
-    ecptsfull = np.concatenate(([0], ecpts, n)) - 1
+    ecptsfull = np.concatenate(([0], ecpts, [n])) - 1
+    ecptsfull = ecptsfull.astype(np.int)
     numchgfull = len(ecptsfull)
 
-    ResegS = np.zeros((numchgfull-1, r))
+    ResegS = np.zeros((numchgfull-1, r), dtype=np.complex)
     for  itr in range(numchgfull-1):
         lower = ecptsfull[itr] + 1
         upper = ecptsfull[itr+1] + 1
         Ycur = ndXmat[:, lower:upper]
         Xcur = nXmat[:, lower:upper]
-        lams = np.zeros(r) + np.inf
+        lams = np.zeros(r, dtype=np.complex) + np.inf
         for j in range(int(r/2)):
-            tY = Ycur[(2*j):(2*j+1), :]
-            tX = Xcur[(2*j):(2*j+1), :]
-            corY = tY.dot(tY.T)
+            tY = Ycur[(2*j):(2*j+2), :]
+            tX = Xcur[(2*j):(2*j+2), :]
+            corY = tY.dot(tX.T)
             corX = np.trace(tX.dot(tX.T))
             a = np.trace(corY)/corX
             b = (corY[1, 0] - corY[0, 1])/corX
@@ -335,14 +336,14 @@ def ReconXmat(ecpts, ndXmat, nXmat, kpidxs, eigVecs, TrueXmat, tStep):
         lams[lams==np.inf] = np.conjugate(lams[lams!=np.inf])
         ResegS[itr, :] = lams
     
-    LamMs = np.zeros((r, n))
+    LamMs = np.zeros((r, n), dtype=np.complex)
     LamMs[:, 0] = ResegS[0, :]
     for itr in range(1, numchgfull):
-        lower = ecptsfull[itr] + 1
-        upper = ecptsfull[itr+1] + 1
-        LamMs[:, lower:upper] = ResegS[itr-1, ]
+        lower = ecptsfull[itr-1] + 1
+        upper = ecptsfull[itr] + 1
+        LamMs[:, lower:upper] = ResegS[itr-1, ].reshape(-1, 1)
     
-    EstXmat = np.zeros((d, n))
+    EstXmat = np.zeros((d, n), dtype=np.complex)
     EstXmat[:, 0] = TrueXmat[:, 0]
     for i in range(1, n):
         mTerm = np.diag(LamMs[:, i])

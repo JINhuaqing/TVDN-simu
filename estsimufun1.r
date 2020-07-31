@@ -92,14 +92,14 @@ for(sq in 1:length(seqnum)){
 	      	chgpoint = c(1, length(time))
 		}else{
 			chgpoint = mchgres[[k]]$Test[numchg, ]
-	      	chgpoint = c(1, chgpoint[!is.na(chgpoint)], length(time))
+	      	chgpoint = c(0, chgpoint[!is.na(chgpoint)], length(time)) # 1 -> 0
 		}
 	      mchgpoint[[k]] = chgpoint
 	#      print(chgpoint)
 	      ResegS = matrix(NA, (length(chgpoint)-1), r)
 	      #ResegU = matrix(NA, 90, (length(chgpoint)-1))
 	      for(itr in 1:(length(chgpoint)-1)){
-   	      	 ix = chgpoint[itr]:(chgpoint[itr + 1]-1)
+   	      	 ix = (chgpoint[itr]+1):(chgpoint[itr + 1]) # 
     		       yj = nY[, ix]
     		       Xj = nX[, ix]
     		       lambda = rep(NA, r)

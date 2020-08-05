@@ -11,8 +11,7 @@ from scipy.stats import norm
 from scipy.stats import multivariate_normal as mnorm
 # for general inverse of matrix
 from numpy.linalg import pinv, svd, inv
-#from tqdm import  tqdm
-from tqdm import tqdm_notebook as tqdm
+from tqdm import  tqdm
 import matplotlib.pyplot as plt
 # to use functions in R languge
 import rpy2.robjects as robj

@@ -65,7 +65,7 @@ candlist0 =c(0, 50, 99, 144, 180) #candlist0[-2]# round(c(0.1, x0.23, 0.40, 0.65
 ratio = seq(-7, 8, length.out = 12)
 #ratio = ratio[-c(1:3)]
 #ratio = rep(ratio[1:(r/2)], each = 2)
-svdA = matrix(NA,nrow(Xmat),  length(candlist0)-1)
+svdA = matrix(NA, nrow(Xmat),  length(candlist0)-1)
 for(j in 1:(length(candlist0)-1)){
     svdA[, j]= V * ratio[j]/10
     }

@@ -133,7 +133,7 @@ class TVDNDetect:
         if decimateRate is not None:
             nYmatList = []
             # I use the decimate function in R to reproduce the results by the R version code
-            # It is save to use decimate function in python
+            # It is OK to use decimate function in python
             for i in range(nYmat.shape[0]):
                 nYmatList.append(decimate_R(nYmat[i, :], decimateRate))
             nYmat = np.array(nYmatList)

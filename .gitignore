@@ -16,12 +16,14 @@ demo/*.ipynb
 others/*.zip
 Rcode/*.txt
 plots
+otherProjs/*
 
 !pyTVDN/data/
 !demo/demo.ipynb
 pyTVDN/tmpUtils.py
 pyTVDN/TVDNRankTuning.py
-pyTVDN/utils.py
+pyTVDN/utils.py.bak
 pyTVDN/TVDNKappaTuning.py
 realdata/
 simulations/
+MEG_BrainView_plot/*

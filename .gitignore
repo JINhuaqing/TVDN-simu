@@ -20,7 +20,7 @@ otherProjs/*
 
 !pyTVDN/data/
 !demo/demo.ipynb
-pyTVDN/tmpUtils.py
+# pyTVDN/tmpUtils.py
 pyTVDN/TVDNRankTuning.py
 pyTVDN/utils.py.bak
 pyTVDN/TVDNKappaTuning.py

@@ -11,10 +11,10 @@ import warnings
 from .TVDNutils import *
 from .Rfuns import decimate_R
 from .utils import in_notebook
-if in_notebook():
-    from tqdm import tqdm_notebook as tqdm
-else:
-    from tqdm import tqdm
+#if in_notebook():
+#    from tqdm import tqdm_notebook as tqdm
+#else:
+from tqdm import tqdm
 
 class TVDNDetect:
     def __init__(self, Ymat, smoothType="Bspline", dataType=None, saveDir=None, showProgress=True, **paras):

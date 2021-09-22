@@ -12,10 +12,10 @@ from scipy.stats import multivariate_normal as mnorm
 from easydict import EasyDict as edict
 from .utils import in_notebook
 from .Rfuns import bw_nrd0_R, smooth_spline_R, fourier_reg_R
-if in_notebook():
-    from tqdm import tqdm_notebook as tqdm
-else:
-    from tqdm import tqdm
+#if in_notebook():
+#    from tqdm import tqdm_notebook as tqdm
+#else:
+from tqdm import tqdm
 
 
 # Function to obtain the Bspline estimate of Xmat and dXmat, d x n

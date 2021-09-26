@@ -10,7 +10,7 @@ from prettytable import PrettyTable
 import warnings
 from .TVDNutils import *
 from .Rfuns import decimate_R
-from .utils import in_notebook
+# from .utils import in_notebook
 #if in_notebook():
 #    from tqdm import tqdm_notebook as tqdm
 #else:

@@ -28,6 +28,50 @@ def GetAmatNoKernel(dXmat, Xmat):
     Amat = XY.dot(invM)
     return Amat
 
+def ReconXmatSWHalfH0(ecpts, dXmat, Xmat, Ymat, time, is_full=False):
+    """
+    Under the null: no change point to reconstruct the seqs
+    Input: 
+        ecpts: Estimated change points, 
+        dXmat: a d x n matrix
+        Xmat: a d x n matrix
+        Ymat: The matrix to construct, d x n 
+        time: The time step
+        if_full: Where outputing full info or not
+
+    Return:
+        Estimated Xmat, d x n
+    """
+    #print(f"The class calls the new reconstruction function, ReconXmatNew")
+    d, n = Ymat.shape
+    tStep = np.diff(time)[0]
+    trainIdxs = trainIdxFn(ecpts, n)
+    curIdxs = np.sort(np.random.choice(trainIdxs, size=int(len(trainIdxs)), replace=True))
+    curIdxs = np.array(curIdxs, dtype=int)
+
+    XmatPart = Xmat[:, curIdxs]
+    dXmatPart = dXmat[:, curIdxs]
+    timePart = time[curIdxs]
+    Amat = GetAmatNoKernel(dXmatPart, XmatPart)
+    
+    EstXmat = np.zeros((d, n), dtype=np.complex)
+    EstXmat[:, 0] = Ymat[:, 0]
+    for i in range(1, n):
+        if i in trainIdxs:
+            EstXmat[:, i] = Ymat[:, i]
+        else:
+            EstXmat[:, i] = Amat.dot(EstXmat[:, i-1]) * tStep + EstXmat[:,i-1]
+        
+    if is_full:
+        ReDict = edict()
+        ReDict.EstXmatReal = detrend(EstXmat.real)
+        ReDict.EstXmatRealOrg = EstXmat.real
+        ReDict.EstXmatImag = EstXmat.imag
+        ReDict.Amat = Amat
+        return ReDict
+    else:
+        return detrend(EstXmat.real)
+
 def trainIdxFn(ecpts, n):
     """
     return the indices of training dataset, idx from 0
@@ -212,6 +256,7 @@ def ReconXmatSWHalf2(ecpts, dXmat, Xmat, Ymat, time, is_full=False):
         Xcur = Xmat[:, lower:(lower+hncol)]
         timeCur = time[lower:(lower+hncol)]
         Amat = GetAmat(Ycur, Xcur, timeCur)/hncol
+        # Amat = GetAmatNoKernel(Ycur, Xcur)  I think it is the better way
         Amats.append(Amat)
         
     

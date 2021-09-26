@@ -10,8 +10,8 @@ from scipy.signal import detrend
 from numpy.linalg import inv, svd
 from scipy.stats import multivariate_normal as mnorm
 from easydict import EasyDict as edict
-from .utils import in_notebook
 from .Rfuns import bw_nrd0_R, smooth_spline_R, fourier_reg_R
+# from .utils import in_notebook
 #if in_notebook():
 #    from tqdm import tqdm_notebook as tqdm
 #else:

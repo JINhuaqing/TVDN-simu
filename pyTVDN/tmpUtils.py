@@ -9,7 +9,17 @@ timeLims = edict()
 timeLims.st02 = [35, 95]
 timeLims.st03 = [20, 80]
 
-def GetAmatNoKernel(dXmat, Xmat):
+def lowRAmatFn(Amat, rate=0.8):
+    eigVals, eigVecs = np.linalg.eig(Amat)
+    eigVecsInv = np.linalg.inv(eigVecs)
+    rSel = np.where(np.cumsum(np.abs(eigVals))/np.sum(np.abs(eigVals)) >rate)[0][0] + 1
+    v1, v2 = np.abs(eigVals[rSel-1]), np.abs(eigVals[rSel])
+    if np.abs(v1-v2) < 1e-10:
+        rSel = rSel + 1
+    lowRAmat = eigVecs[:, :rSel].dot(np.diag(eigVals[:rSel])).dot(eigVecsInv[:rSel, :])
+    return lowRAmat.real
+
+def GetAmatNoKernel(dXmat, Xmat, rate=1):
     """
     simply linear regression to estimate Amat under H0: no change
     Input: 
@@ -23,12 +33,14 @@ def GetAmatNoKernel(dXmat, Xmat):
     M = Xmat.dot(Xmat.T)/n
     XY = dXmat.dot(Xmat.T)/n
     U, S, VT = svd(M)
-    r = np.argmax(np.cumsum(S)/np.sum(S) >= 0.999) + 1 # For real data
+    r = np.argmax(np.cumsum(S)/np.sum(S) >= 0.999) # For real data
     invM = U[:, :r].dot(np.diag(1/S[:r])).dot(VT[:r, :])
     Amat = XY.dot(invM)
+    if rate < 1:
+        Amat = lowRAmatFn(Amat, rate=rate)
     return Amat
 
-def ReconXmatSWHalfH0(ecpts, dXmat, Xmat, Ymat, time, is_full=False):
+def ReconXmatSWHalfH0(ecpts, dXmat, Xmat, Ymat, time, rate=0.8, is_full=False):
     """
     Under the null: no change point to reconstruct the seqs
     Input: 
@@ -46,13 +58,14 @@ def ReconXmatSWHalfH0(ecpts, dXmat, Xmat, Ymat, time, is_full=False):
     d, n = Ymat.shape
     tStep = np.diff(time)[0]
     trainIdxs = trainIdxFn(ecpts, n)
-    curIdxs = np.sort(np.random.choice(trainIdxs, size=int(len(trainIdxs)), replace=True))
+    numSps = int(np.max(np.diff(ecpts))/2)
+    curIdxs = np.sort(np.random.choice(trainIdxs, size=numSps, replace=1))
     curIdxs = np.array(curIdxs, dtype=int)
 
     XmatPart = Xmat[:, curIdxs]
     dXmatPart = dXmat[:, curIdxs]
     timePart = time[curIdxs]
-    Amat = GetAmatNoKernel(dXmatPart, XmatPart)
+    Amat = GetAmatNoKernel(dXmatPart, XmatPart, rate=rate)
     
     EstXmat = np.zeros((d, n), dtype=np.complex)
     EstXmat[:, 0] = Ymat[:, 0]
@@ -224,7 +237,7 @@ def PredDMD(Ymat, ecpts, rank=0, SegPredDMD=SegPredDMDHalf):
 
 # Reconstruct Xmat from results segment-wisely when using half data
 # I use Amat directly without estimating U. 
-def ReconXmatSWHalf2(ecpts, dXmat, Xmat, Ymat, time, is_full=False):
+def ReconXmatSWHalf2(ecpts, dXmat, Xmat, Ymat, time, rate=0.8, is_full=False):
     """
     Input: 
         ecpts: Estimated change points, 
@@ -254,9 +267,7 @@ def ReconXmatSWHalf2(ecpts, dXmat, Xmat, Ymat, time, is_full=False):
         hncol = int(upper-lower/2)
         Ycur = dXmat[:, lower:(lower+hncol)]
         Xcur = Xmat[:, lower:(lower+hncol)]
-        timeCur = time[lower:(lower+hncol)]
-        Amat = GetAmat(Ycur, Xcur, timeCur)/hncol
-        # Amat = GetAmatNoKernel(Ycur, Xcur)  I think it is the better way
+        Amat = GetAmatNoKernel(Ycur, Xcur, rate=rate) 
         Amats.append(Amat)
         
     
@@ -266,7 +277,7 @@ def ReconXmatSWHalf2(ecpts, dXmat, Xmat, Ymat, time, is_full=False):
         if i in trainIdxs:
             EstXmat[:, i] = Ymat[:, i]
         else:
-            matIdx = np.sum(i>=numchgfull) - 1
+            matIdx = np.sum(i>ecptsfull) - 1
             Amat = Amats[matIdx]
             EstXmat[:, i] = Amat.dot(EstXmat[:, i-1]) * tStep + EstXmat[:,i-1]
         

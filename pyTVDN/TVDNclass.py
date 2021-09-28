@@ -319,7 +319,7 @@ class TVDNDetect:
         if GT is not None:
             for j, cpt in enumerate(GT):
                 if j == 0:
-                    plt.axvline(cpt/ajfct, color="blue", linestyle="-", label="Grandtruth")
+                    plt.axvline(cpt/ajfct, color="blue", linestyle="-", label="Ground truth")
                 else:
                     plt.axvline(cpt/ajfct, color="blue", linestyle="-")
 

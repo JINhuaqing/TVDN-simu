@@ -58,7 +58,8 @@ def ReconXmatSWHalfH0(ecpts, dXmat, Xmat, Ymat, time, rate=0.8, is_full=False):
     d, n = Ymat.shape
     tStep = np.diff(time)[0]
     trainIdxs = trainIdxFn(ecpts, n)
-    numSps = int(np.max(np.diff(ecpts))/2)
+    #numSps = int(np.max(np.diff(ecpts))/2)
+    numSps = int(len(trainIdxs))
     curIdxs = np.sort(np.random.choice(trainIdxs, size=numSps, replace=1))
     curIdxs = np.array(curIdxs, dtype=int)
 

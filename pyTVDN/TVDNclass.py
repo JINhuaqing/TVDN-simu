@@ -38,6 +38,7 @@ class TVDNDetect:
                     fct: The factor to adjust h when estimating A matrix
                     fName:  The file name when saving the results
                     freq: The frequency of the data sequences, the parameter used drawing the eigen values plots
+                    nKnots: number of knots for Bspline
         """
         self.Ymat = Ymat
         self.paras = edict()
@@ -66,6 +67,7 @@ class TVDNDetect:
             self.paras.fName = "MEG"
             self.paras.freq = 60
             self.paras.nbasis = 10
+            self.paras.nKnots = None
         elif self.dataType == "fmri":
             self.paras.kappa = 2.65
             self.paras.Lmin = 4
@@ -80,6 +82,7 @@ class TVDNDetect:
             self.paras.fName = "fMRI"
             self.paras.freq = 0.5
             self.paras.nbasis = 10
+            self.paras.nKnots = None
         else:
             self.paras.kappa = 2.65
             self.paras.Lmin = 4
@@ -94,6 +97,7 @@ class TVDNDetect:
             self.paras.fName = "simu"
             self.paras.freq = 180
             self.paras.nbasis = 10
+            self.paras.nKnots = None
         keys = list(self.paras.keys())
         for key in paras.keys():
             self.paras[key] = paras[key]
@@ -157,7 +161,7 @@ class TVDNDetect:
         self.ptime = np.linspace(0, acTime, n) 
         self.time = np.linspace(0, self.paras.T, n)
         if self.smoothType == "bspline":
-            self.dXmat, self.Xmat = GetBsplineEst(self.nYmat, self.time, lamb=self.paras.lamb)
+            self.dXmat, self.Xmat = GetBsplineEst(self.nYmat, self.time, lamb=self.paras.lamb, nKnots=self.paras.nKnots)
         elif self.smoothType == "fourier":
             self.dXmat, self.Xmat = GetFourierEst(self.nYmat, self.time, nbasis=self.paras.nbasis)
     
@@ -445,8 +449,8 @@ class TVDNDetect:
             self.GetRecResCur()
         RecYmatCur = self.RecResCur.EstXmatReal
         #deltaT = np.diff(self.time)[0]
-        MSE = np.sqrt(np.sum((RecYmatCur-self.Xmat)**2)/np.sum(self.Xmat**2))
-        #MSE = np.sqrt(np.sum((RecYmatCur-self.nYmat)**2)/np.sum(self.nYmat**2))
+        #MSE = np.sqrt(np.sum((RecYmatCur-self.Xmat)**2)/np.sum(self.Xmat**2))
+        MSE = np.sqrt(np.sum((RecYmatCur-self.nYmat)**2)/np.sum(self.nYmat**2))
         #MSE = np.mean((RecYmatCur-self.nYmat)**2)
         return MSE
 

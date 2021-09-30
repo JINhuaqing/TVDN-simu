@@ -19,7 +19,7 @@ from tqdm import tqdm
 
 
 # Function to obtain the Bspline estimate of Xmat and dXmat, d x n
-def GetBsplineEst(Ymat, time, lamb=1e-6):
+def GetBsplineEst(Ymat, time, lamb=1e-6, nKnots=None):
     """
     Input:
         Ymat: The observed data matrix, d x n
@@ -31,7 +31,7 @@ def GetBsplineEst(Ymat, time, lamb=1e-6):
     Xmatlist = []
     dXmatlist = []
     for i in range(d):
-        spres = smooth_spline_R(x=time, y=Ymat[i, :], lamb=lamb)
+        spres = smooth_spline_R(x=time, y=Ymat[i, :], lamb=lamb, nKnots=nKnots)
         Xmatlist.append(spres["yhat"])
         dXmatlist.append(spres["ydevhat"])
     Xmat = np.array(Xmatlist)

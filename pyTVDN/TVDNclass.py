@@ -358,7 +358,8 @@ class TVDNDetect:
         if is_imag:
             RecYmatCur = self.RecResCur.EstXmatImag
         else:
-            RecYmatCur = self.RecResCur.EstXmatReal
+            # or detrend version
+            RecYmatCur = self.RecResCur.EstXmatRealOrg
         d, n = self.nYmat.shape
         if idxs is not None:
             assert d>=np.max(idxs) & np.min(idxs)>=0, "Wrong index!"
@@ -447,7 +448,7 @@ class TVDNDetect:
         assert self.finalRes is not None, "Run main function first!"
         if self.RecResCur is None:
             self.GetRecResCur()
-        RecYmatCur = self.RecResCur.EstXmatReal
+        RecYmatCur = self.RecResCur.EstXmatRealOrg
         #deltaT = np.diff(self.time)[0]
         #MSE = np.sqrt(np.sum((RecYmatCur-self.Xmat)**2)/np.sum(self.Xmat**2))
         MSE = np.sqrt(np.sum((RecYmatCur-self.nYmat)**2)/np.sum(self.nYmat**2))
@@ -556,7 +557,7 @@ class TVDNDetect:
             
         MSEs = []
         for i in range(MaxM+1):
-            RecYmatCur = self.RecYmatAll[i].EstXmatReal
+            RecYmatCur = self.RecYmatAll[i].EstXmatRealOrg
             #deltaT = np.diff(self.time)[0]
             MSE = np.sqrt(np.sum((RecYmatCur-self.Xmat)**2)/np.sum(self.Xmat**2))
             #MSE = np.sqrt(np.sum((RecYmatCur-self.nYmat)**2)/np.sum(self.nYmat**2))

@@ -19,7 +19,9 @@ plots
 otherProjs/*
 
 !pyTVDN/data/
-!demo/demo.ipynb
+!demo/MEGDemo.ipynb
+!demo/fMRIDemo.ipynb
+!demo/multipfMRIsDemo.ipynb
 # pyTVDN/tmpUtils.py
 pyTVDN/TVDNRankTuning.py
 pyTVDN/utils.py.bak

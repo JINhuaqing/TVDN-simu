@@ -127,6 +127,8 @@ class TVDNDetect:
         self.numchgs = None
         self.ecpts = None
         self.canpts = None
+        self.curEigVecs = None
+        self.curEigVals = None
     
     # Data preprocessing, including detrend and decimate
     def _Preprocess(self):
@@ -458,6 +460,7 @@ class TVDNDetect:
 
     def GetRecResCur(self):
         numchg = len(self.ecpts)
+        assert self.finalRes is not None, "Run main function first!"
         if self.RecYmatAll is not None:
             self.RecResCur = self.RecYmatAll[numchg]
         elif self.saveDir is not None:
@@ -617,3 +620,20 @@ class TVDNDetect:
             MSE = self.GetCurMSE()
             tb.add_row([len(self.ecpts), self.ecpts, MSE, self.paras.r])
         return tb.__str__()
+
+    
+    def GetFeatures(self):
+        """
+        obtain the eigvals and eigvectors for current ecpts
+        """
+        if self.RecResCur is None:
+            self.GetRecResCur()
+        Ur = self.midRes.eigVecs[:, :self.paras.r]
+            
+        lamMs = []
+        for idx, ecpt in enumerate(np.concatenate([[0], self.ecpts])):
+            lamM = self.RecResCur.LamMs[:, int(ecpt)]
+            lamMs.append(lamM)
+        
+        self.curEigVecs = Ur
+        self.curEigVals = lamMs

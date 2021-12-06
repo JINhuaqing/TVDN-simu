@@ -341,6 +341,36 @@ class TVDNDetect:
         else:
             plt.savefig(saveFigPath)
         
+
+    # Plot the change point detection results
+    def PlotEcptsFull(self, saveFigPath=None, GT=None):
+        assert self.finalRes is not None, "Run main function first!"
+        d, n = self.Ymat.shape
+        acTime = n / self.paras.freq/ self.paras.decimateRate
+        ajfct = n/acTime
+        plt.figure(figsize=[10, 5])
+        cptime = np.linspace(0, acTime, n)
+        for i in range(d):
+            plt.plot(cptime, self.Ymat[i, :], "-")
+
+        if GT is not None:
+            for j, cpt in enumerate(GT):
+                if j == 0:
+                    plt.axvline(cpt/ajfct, color="blue", linestyle="-", label="Ground truth")
+                else:
+                    plt.axvline(cpt/ajfct, color="blue", linestyle="-")
+
+        for j, ecpt in enumerate(self.ecpts):
+            if j == 0:
+                plt.axvline(ecpt*self.paras.decimateRate/ajfct, color="red", linestyle="--", label="Estimate")
+            else:
+                plt.axvline(ecpt*self.paras.decimateRate/ajfct, color="red", linestyle="--")
+
+            plt.legend(loc="upper left")
+        if saveFigPath is None:
+            plt.show() 
+        else:
+            plt.savefig(saveFigPath)
     
     # Plot reconstructed Ymat curve 
     def PlotRecCurve(self, idxs=None, bestK=None, quantiles=None, saveFigPath=None, is_imag=False, is_smoothCurve=False):
@@ -620,7 +650,6 @@ class TVDNDetect:
             MSE = self.GetCurMSE()
             tb.add_row([len(self.ecpts), self.ecpts, MSE, self.paras.r])
         return tb.__str__()
-
     
     def GetFeatures(self):
         """

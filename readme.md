@@ -87,7 +87,7 @@ Detection.PlotRecCurve(idxs=[43, 45, 59], saveFigPath="recCurve.jpg")
 Detection.PlotEigenCurve()
 # save figure if you specify the `saveFigPath`
 
-# print the results
+# print the results here
 print(Detection)
 
 ```

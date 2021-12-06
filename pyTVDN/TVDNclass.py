@@ -127,6 +127,8 @@ class TVDNDetect:
         self.numchgs = None
         self.ecpts = None
         self.canpts = None
+        self.curEigVecs = None
+        self.curEigVals = None
     
     # Data preprocessing, including detrend and decimate
     def _Preprocess(self):
@@ -339,6 +341,36 @@ class TVDNDetect:
         else:
             plt.savefig(saveFigPath)
         
+
+    # Plot the change point detection results
+    def PlotEcptsFull(self, saveFigPath=None, GT=None):
+        assert self.finalRes is not None, "Run main function first!"
+        d, n = self.Ymat.shape
+        acTime = n / self.paras.freq/ self.paras.decimateRate
+        ajfct = n/acTime
+        plt.figure(figsize=[10, 5])
+        cptime = np.linspace(0, acTime, n)
+        for i in range(d):
+            plt.plot(cptime, self.Ymat[i, :], "-")
+
+        if GT is not None:
+            for j, cpt in enumerate(GT):
+                if j == 0:
+                    plt.axvline(cpt/ajfct, color="blue", linestyle="-", label="Ground truth")
+                else:
+                    plt.axvline(cpt/ajfct, color="blue", linestyle="-")
+
+        for j, ecpt in enumerate(self.ecpts):
+            if j == 0:
+                plt.axvline(ecpt*self.paras.decimateRate/ajfct, color="red", linestyle="--", label="Estimate")
+            else:
+                plt.axvline(ecpt*self.paras.decimateRate/ajfct, color="red", linestyle="--")
+
+            plt.legend(loc="upper left")
+        if saveFigPath is None:
+            plt.show() 
+        else:
+            plt.savefig(saveFigPath)
     
     # Plot reconstructed Ymat curve 
     def PlotRecCurve(self, idxs=None, bestK=None, quantiles=None, saveFigPath=None, is_imag=False, is_smoothCurve=False):
@@ -458,6 +490,7 @@ class TVDNDetect:
 
     def GetRecResCur(self):
         numchg = len(self.ecpts)
+        assert self.finalRes is not None, "Run main function first!"
         if self.RecYmatAll is not None:
             self.RecResCur = self.RecYmatAll[numchg]
         elif self.saveDir is not None:
@@ -617,3 +650,19 @@ class TVDNDetect:
             MSE = self.GetCurMSE()
             tb.add_row([len(self.ecpts), self.ecpts, MSE, self.paras.r])
         return tb.__str__()
+    
+    def GetFeatures(self):
+        """
+        obtain the eigvals and eigvectors for current ecpts
+        """
+        if self.RecResCur is None:
+            self.GetRecResCur()
+        Ur = self.midRes.eigVecs[:, :self.paras.r]
+            
+        lamMs = []
+        for idx, ecpt in enumerate(np.concatenate([[0], self.ecpts])):
+            lamM = self.RecResCur.LamMs[:, int(ecpt)]
+            lamMs.append(lamM)
+        
+        self.curEigVecs = Ur
+        self.curEigVals = lamMs

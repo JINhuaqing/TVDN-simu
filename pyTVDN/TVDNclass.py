@@ -27,8 +27,9 @@ class TVDNDetect:
                Inlcuding:
                     kappa: The parameter of penalty in MBIC
                     Lmin: The minimal length between 2 change points
-                    r: The rank setted beforehand, in most cases, r=rAct. If we have non-complex singular values, r < rAct
+                    r: The rank of A matrix, in most cases, r=rAct. If we have non-complex singular values, r < rAct
                        If r is decimal, the rank is the number of eigen values which account for 100r % of the total variance
+                       If r is integer, the r in algorithm can be r + 1 if r breaks the conjugate eigval pairs. 
                     MaxM: int, maximal number of change point 
                     lamb: The smooth parameter for B-spline
                     downRate: The downsample factor, determine how many Ai matrix to contribute to estimate the eigen values/vectors.
@@ -104,6 +105,8 @@ class TVDNDetect:
         if showProgress:
             print("The parameters for detection are:")
             pprint(self.paras)
+            if isinstance(self.paras.r, int):
+                print(f"The rank can be {self.paras.r+1} if {self.paras.r} breaks a eigval pair.")
         
         if saveDir is not None:
             self.saveDir = Path(saveDir)
@@ -172,21 +175,36 @@ class TVDNDetect:
         fct = self.paras.fct
         if self.dXmat is None:
             self.SmoothEst()
-        self.Amat = GetAmat(self.dXmat, self.Xmat, self.time, downRate, fct=fct)
+            
+        if self.saveDir is None:
+            self.Amat = GetAmat(self.dXmat, self.Xmat, self.time, downRate, fct=fct)
+        else:
+            saveAmatPath = self.saveDir/f"{self.paras.fName}_Amat.pkl"
+            if not saveAmatPath.exists():
+                self.Amat = GetAmat(self.dXmat, self.Xmat, self.time, downRate, fct=fct)
+                with open(saveAmatPath, "wb") as f:
+                    pickle.dump(self.Amat, f)
+            else:
+                with open(saveAmatPath, "rb") as f:
+                    self.Amat = pickle.load(f)
+                
     
     
     def GetNewData(self):
         if self.Amat is None:
             self.GetAmat()
 
+        eigVals, eigVecs = np.linalg.eig(self.Amat)
         if self.paras.r is None:
-            eigVals, eigVecs = np.linalg.eig(self.Amat)
             rSel = np.where(np.cumsum(np.abs(eigVals))/np.sum(np.abs(eigVals)) >0.8)[0][0] + 1
             self.paras.r = rSel
         elif self.paras.r < 1:
-            eigVals, eigVecs = np.linalg.eig(self.Amat)
             rSel = np.where(np.cumsum(np.abs(eigVals))/np.sum(np.abs(eigVals)) >self.paras.r)[0][0] + 1
             self.paras.r = rSel
+        
+        # if breaking conjugate eigval pair, add r with 1
+        if (eigVals[self.paras.r-1].imag + eigVals[self.paras.r].imag ) == 0:
+            self.paras.r = self.paras.r + 1
 
         r = self.paras.r
         
@@ -261,17 +279,19 @@ class TVDNDetect:
 
         if self.saveDir is not None:
             # Update the rank
-            if self.paras.r is None or self.paras.r < 1:
-                if self.Amat is None:
-                    self.GetAmat()
-                if self.paras.r is None:
-                    eigVals, eigVecs = np.linalg.eig(self.Amat)
-                    rSel = np.where(np.cumsum(np.abs(eigVals))/np.sum(np.abs(eigVals)) >0.8)[0][0] + 1
-                    self.paras.r = rSel
-                elif self.paras.r < 1:
-                    eigVals, eigVecs = np.linalg.eig(self.Amat)
-                    rSel = np.where(np.cumsum(np.abs(eigVals))/np.sum(np.abs(eigVals)) >self.paras.r)[0][0] + 1
-                    self.paras.r = rSel
+            if self.Amat is None:
+                self.GetAmat()
+            eigVals, eigVecs = np.linalg.eig(self.Amat)
+            if self.paras.r is None:
+                rSel = np.where(np.cumsum(np.abs(eigVals))/np.sum(np.abs(eigVals)) >0.8)[0][0] + 1
+                self.paras.r = rSel
+            elif self.paras.r < 1:
+                rSel = np.where(np.cumsum(np.abs(eigVals))/np.sum(np.abs(eigVals)) >self.paras.r)[0][0] + 1
+                self.paras.r = rSel
+        
+            # if breaking conjugate eigval pair, add r with 1
+            if (eigVals[self.paras.r-1].imag + eigVals[self.paras.r].imag ) == 0:
+                self.paras.r = self.paras.r + 1
 
             saveResPath = self.saveDir/f"{self.paras.fName}_Rank{self.paras.r}.pkl"
             if not saveResPath.exists():
@@ -373,7 +393,7 @@ class TVDNDetect:
             plt.savefig(saveFigPath)
     
     # Plot reconstructed Ymat curve 
-    def PlotRecCurve(self, idxs=None, bestK=None, quantiles=None, saveFigPath=None, is_imag=False, is_smoothCurve=False):
+    def PlotRecCurve(self, idxs=None, bestK=None, quantiles=None, saveFigPath=None, is_smoothCurve=False):
         """
         idxs: The indices of the sequences to plot 
         bestK: The best K fitted curves to plot according to the errors
@@ -387,11 +407,9 @@ class TVDNDetect:
             warnings.warn("bestK is provided, so quantiles will be ignored", UserWarning)
         if self.RecResCur is None:
             self.GetRecResCur()
-        if is_imag:
-            RecYmatCur = self.RecResCur.EstXmatImag
-        else:
-            # or detrend version
-            RecYmatCur = self.RecResCur.EstXmatRealOrg
+            
+        # or detrend version
+        RecYmatCur = self.RecResCur.EstXmatRealOrg
         d, n = self.nYmat.shape
         if idxs is not None:
             assert d>=np.max(idxs) & np.min(idxs)>=0, "Wrong index!"
@@ -418,8 +436,7 @@ class TVDNDetect:
 
         for i, idx, in enumerate(idxs):
             plt.subplot(numRow, 3, i+1)
-            if not is_imag:
-                plt.plot(self.ptime, self.nYmat[idx, :], "-", label="Observed")
+            plt.plot(self.ptime, self.nYmat[idx, :], "-", label="Observed")
             plt.plot(self.ptime, RecYmatCur[idx, :], "-.", label="Reconstructed")
             if is_smoothCurve:
                 if self.Xmat is None:

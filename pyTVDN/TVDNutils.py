@@ -358,7 +358,7 @@ def ReconXmat(ecpts, ndXmat, nXmat, kpidxs, eigVecs, Ymat, tStep, r, is_full=Fal
         ReDict = edict()
         ReDict.EstXmatReal = detrend(EstXmat.real)
         ReDict.EstXmatRealOrg = EstXmat.real
-        ReDict.EstXmatImag = EstXmat.imag
+        ReDict.EstXmatImag = EstXmat.imag # the imag part here should be very small.
         ReDict.LamMs = LamMs
         return ReDict
     else:

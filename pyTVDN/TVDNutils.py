@@ -80,12 +80,12 @@ def GetAmat(dXmat, Xmat, time, downrate=1, fct=1):
         kerdXmat = kernelroot[:, np.newaxis] * (dXmat.T) # n x d
         kerXmat = kernelroot[:, np.newaxis] * (Xmat.T) # n x d
         M = kerXmat.T.dot(kerXmat)/n
-        XY = kerdXmat.T.dot(kerXmat)/n
+        XY = kerdXmat.T.dot(kerXmat)/n # it is Y\trans x X , formula is Amat = Y\trans X (X\trans X)^{-1}
         U, S, VT = svd(M)
         # Num of singular values to keep
         # r = np.argmax(np.cumsum(S)/np.sum(S) > 0.999) + 1 # For simulation
         r = np.argmax(np.cumsum(S)/np.sum(S) >= 0.999) + 1 # For real data
-        invM = U[:, :r].dot(np.diag(1/S[:r])).dot(VT[:r, :])
+        invM = U[:, :r].dot(np.diag(1/S[:r])).dot(VT[:r, :]) # M is symmetric
         Amat = Amat + XY.dot(invM)
     return Amat
 
